@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // or "mysql" based on typical Next.js setups, defaulting to postgresql
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  SOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ListingType {
+  AUCTION
+  FIXED_PRICE
+  BOTH
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum EscrowStatus {
+  PENDING
+  IN_ESCROW
+  RELEASED
+  DISPUTED
+  REFUNDED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  COMPLETED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  CANCELLED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  username      String         @unique
+  password      String
+  name          String?
+  bio           String?
+  avatar        String?
+  role          Role           @default(BUYER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  listings      Listing[]      @relation("UserListings")
+  bids          Bid[]
+  offers        Offer[]        @relation("BuyerOffers")
+  receivedOffers Offer[]       @relation("SellerOffers")
+  
+  escrowsAsBuyer  Escrow[]     @relation("BuyerEscrows")
+  escrowsAsSeller Escrow[]     @relation("SellerEscrows")
+
+  ordersAsBuyer   Order[]      @relation("BuyerOrders")
+  ordersAsSeller  Order[]      @relation("SellerOrders")
+
+  sentMessages     Message[]   @relation("SentMessages")
+  receivedMessages Message[]   @relation("ReceivedMessages")
+
+  notifications    Notification[]
+  reviewsGiven     Review[]    @relation("ReviewsGiven")
+  reviewsReceived  Review[]    @relation("ReviewsReceived")
+}
+
+model Listing {
+  id           String         @id @default(cuid())
+  title        String
+  description  String
+  whatsappUser String?        // Specific to the marketplace niche
+  price        Float?         // Buy Now price
+  startingBid  Float?         // For auctions
+  currentBid   Float?         // Highest bid
+  status       ListingStatus  @default(ACTIVE)
+  type         ListingType    @default(FIXED_PRICE)
+  
+  categoryId   String
+  category     Category       @relation(fields: [categoryId], references: [id])
+  
+  sellerId     String
+  seller       User           @relation("UserListings", fields: [sellerId], references: [id])
+  
+  bids         Bid[]
+  offers       Offer[]
+  escrow       Escrow?
+  order        Order?
+  images       Image[]
+  
+  endsAt       DateTime?      // Auction end time
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([sellerId])
+  @@index([categoryId])
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  listings Listing[]
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  amount    Float
+  bidderId  String
+  bidder    User     @relation(fields: [bidderId], references: [id])
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@index([bidderId])
+}
+
+model Offer {
+  id        String      @id @default(cuid())
+  amount    Float
+  status    OfferStatus @default(PENDING)
+  
+  buyerId   String
+  buyer     User        @relation("BuyerOffers", fields: [buyerId], references: [id])
+  
+  sellerId  String      // Redundant but helpful for queries
+  seller    User        @relation("SellerOffers", fields: [sellerId], references: [id])
+  
+  listingId String
+  listing   Listing     @relation(fields: [listingId], references: [id])
+  
+  createdAt DateTime    @default(now())
+
+  @@index([listingId])
+  @@index([buyerId])
+}
+
+model Escrow {
+  id            String       @id @default(cuid())
+  listingId     String       @unique
+  listing       Listing      @relation(fields: [listingId], references: [id])
+  
+  buyerId       String
+  buyer         User         @relation("BuyerEscrows", fields: [buyerId], references: [id])
+  
+  sellerId      String
+  seller        User         @relation("SellerEscrows", fields: [sellerId], references: [id])
+  
+  amount        Float
+  status        EscrowStatus @default(PENDING)
+  
+  transactionId String?      // External reference (Stripe/PayPal)
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([listingId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  listingId       String      @unique
+  listing         Listing     @relation(fields: [listingId], references: [id])
+  
+  buyerId         String
+  buyer           User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  
+  sellerId        String
+  seller          User        @relation("SellerOrders", fields: [sellerId], references: [id])
+  
+  amount          Float
+  stripeSessionId String?     @unique
+  status          OrderStatus @default(PENDING)
+  
+  invoice         Invoice?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model Invoice {
+  id        String        @id @default(cuid())
+  amount    Float
+  status    InvoiceStatus @default(UNPAID)
+  
+  orderId   String        @unique
+  order     Order         @relation(fields: [orderId], references: [id])
+  
+  createdAt DateTime      @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // e.g., "BID_RECEIVED", "OFFER_ACCEPTED", "OUTBID"
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  createdAt  DateTime @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int      // 1-5
+  comment     String?
+  
+  reviewerId  String
+  reviewer    User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  
+  revieweeId  String
+  reviewee    User     @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+  
+  listingId   String?  // Optional relation to the listing
+  
+  createdAt   DateTime @default(now())
+
+  @@index([revieweeId])
+}
