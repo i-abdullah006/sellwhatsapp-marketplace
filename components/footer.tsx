@@ -40,7 +40,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 font-bold text-lg">
               <ShoppingBag className="h-5 w-5 text-primary" />
-              SellWhatsApp
+              SellWhatsappUsername
             </Link>
             <p className="mt-2 text-sm text-muted-foreground">
               The trusted marketplace for buying and selling WhatsApp accounts with escrow protection.
@@ -70,7 +70,7 @@ export function Footer() {
         <Separator className="my-8" />
 
         <div className="flex flex-col sm:flex-row justify-between gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} SellWhatsApp. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} SellWhatsappUsername. All rights reserved.</p>
           <div className="flex gap-4">
             <Link href="#" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             <Link href="#" className="hover:text-foreground transition-colors">Terms of Service</Link>

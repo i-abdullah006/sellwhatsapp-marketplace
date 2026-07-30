@@ -15,7 +15,7 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 font-bold text-xl">
             <ShoppingBag className="h-6 w-6 text-primary" />
-            SellWhatsApp
+            SellWhatsappUsername
           </Link>
         </div>
         <Card>

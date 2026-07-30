@@ -56,7 +56,7 @@ export default function CheckoutStatusPage() {
                     <div>
                       <p className="font-semibold text-sm text-emerald-800 dark:text-emerald-300">Escrow Protection Active</p>
                       <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
-                        Your payment is held securely by SellWhatsApp. The seller will now transfer the account. Once you confirm receipt, funds will be released.
+                        Your payment is held securely by SellWhatsappUsername. The seller will now transfer the account. Once you confirm receipt, funds will be released.
                       </p>
                     </div>
                   </div>

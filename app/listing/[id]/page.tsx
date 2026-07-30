@@ -357,7 +357,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
               <div>
                 <p className="font-semibold text-sm text-emerald-800 dark:text-emerald-300">Escrow Protected</p>
                 <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
-                  Payment is held securely by SellWhatsApp until you confirm successful account transfer. Your money is safe.
+                  Payment is held securely by SellWhatsappUsername until you confirm successful account transfer. Your money is safe.
                 </p>
               </div>
             </CardContent>

@@ -5,7 +5,7 @@ import { Footer } from "@/components/footer"
 import { PageTransition } from "@/components/page-transition"
 
 export const metadata: Metadata = {
-  title: "SellWhatsApp — Buy & Sell WhatsApp Accounts Safely",
+  title: "SellWhatsappUsername — Buy & Sell WhatsApp Accounts Safely",
   description: "The trusted marketplace for buying and selling WhatsApp accounts with escrow protection.",
 }
 
